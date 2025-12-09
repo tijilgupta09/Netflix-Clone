@@ -1,23 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './TitleCards.css'
-import cards_data from '../../assets/cards/Cards_data'
 import { Link } from 'react-router-dom';
 
- 
 const TitleCards = ({title, category}) => {
 
   const [apiData, setApiData] = useState([]);
   const cardsRef = useRef();
 
+  // SECURE: Use the token from the .env file
   const options = {
-  method: 'GET',
-  headers: {
-    accept: 'application/json',
-    Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmMjc0ZDlhYzA0NmMyZGVlMmM1YjU1NGE0Nzk5MGZiZiIsIm5iZiI6MTc2MDg3MzkyNC45MSwic3ViIjoiNjhmNGNkYzQ3YmE2ZDAzYzlmOGU3MTE2Iiwic2NvcGVzIjpbImFwaV9yZWFkIl0sInZlcnNpb24iOjF9.TeI_ahLCtJyEJoxi54gy-QtdsGU9D3G5N8LfP6pPeiI'
-  }
-};
-
-
+    method: 'GET',
+    headers: {
+      accept: 'application/json',
+      Authorization: `Bearer ${import.meta.env.VITE_TMDB_ACCESS_TOKEN}`
+    }
+  };
 
   const handleWheel = (e) => {
     e.preventDefault();
@@ -25,13 +22,24 @@ const TitleCards = ({title, category}) => {
   } 
 
   useEffect(() => {
-
+    // 1. Fetch Data
     fetch(`https://api.themoviedb.org/3/movie/${category?category:"now_playing"}?language=en-US&page=1`, options)
     .then(res => res.json())
     .then(res => setApiData(res.results))
     .catch(err => console.error(err));
 
-    cardsRef.current.addEventListener('wheel' , handleWheel);
+    // 2. Add Event Listener
+    const currentRef = cardsRef.current;
+    if(currentRef) {
+        currentRef.addEventListener('wheel', handleWheel);
+    }
+
+    // 3. CLEANUP: Remove listener when component unmounts (Best Practice)
+    return () => {
+        if(currentRef) {
+            currentRef.removeEventListener('wheel', handleWheel);
+        }
+    }
   }, [])
 
   return (
